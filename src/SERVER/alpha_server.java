@@ -43,25 +43,71 @@ public class alpha_server {
         //On startup truncate online_users table
         DBA.truncateOnlineUsers();
 
-        //Sent the server into listening mode for all kind of client operations
+        //Following loop is here to recive any connections from clients , and then perform
+        //necessary operations according to it
+        /*
+        * Which may include , performing signup
+        *      This will also include letting the user know if the desired username is available
+        *      Letting the client know weather or not there Signup Request was succesful
+        * Login , and on the event of successful login
+        *     Sent some information back to the client who made the login request ,
+        *     Also Make an update for the rest of the clients for the status of this NEW client
+        * Logoff event  ,incase of successful logoff
+        *     Remove the client from online users table
+        *     Broadcast an update about the status of the client
+        * */
         while (true){
 
-            //Client_Server_Data client_server_data =  listenForIncomingConnection();
-
-            Client_Server_Data cli=  new Client_Server_Data();
-            cli.setOPERATION(OPERATIONS.OFFLINE);
-            cli.setIp("192.168.0.2");
-            cli.setPort(1200);
-            cli.setPassword("wegreh");
-            cli.setUsername("aamir");
+            //This is the inital communication with the client , future actions and communcations will made on the
+            //Basis of this Communication
+            Client_Server_Data client_server_data =  listenForIncomingConnection();
 
 
-            BroadCastClientUpdate(cli);
-            //Listens for incoming connection from clients , after every 50 milli seconds (20 times a second)
-            Thread.sleep(1000);
+            //region Handle And Parse Client Request , e.g DBA operation etc
+            Client_Server_Data data_to_sent_back  = null; //This data obj will be send back to client
+
+               //Decision Making process here , what to do with client request
+               switch (client_server_data.getOPERATION()){
+                   case SIGNUP:
+                       //Try to Sign up User , returns necessary information for client
+                       data_to_sent_back =  tryToSignUp(client_server_data);
+                       break;
+
+                   default:
+                       //Do nothing
+                       break;
+               }
+            //endregion
+
+
+
+            //region Sending data back to relevant Client
+            //Now sending back another fresh obj which will contain all the error msgs , and other related  stuff
+            socket = new DatagramSocket();
+            byte[] data_tr  = convertObjectToBytes(data_to_sent_back);
+            InetAddress ia =  InetAddress.getByName(client_server_data.getIp());
+            packet =  new DatagramPacket(data_tr,data_tr.length , ia , client_server_data.getPort());
+            socket.send(packet);
+            //endregion
+
+
+
+            //region BroadCasting Events are being handled here , like login and user offline
+            //If there is a succesfull login or User going offline event , generate broadcast
+            //For login
+            if (data_to_sent_back.getOPERATION() == OPERATIONS.login_good ){
+                BroadCastClientUpdate(new Client_Server_Data());
+            }
+            //for user going offline
+            else if(client_server_data.getOPERATION() == OPERATIONS.OFFLINE){
+                BroadCastClientUpdate(new Client_Server_Data());
+            }
+            //endregion
+
         }
 
     }
+
 
 
     //region Functional Section
@@ -83,8 +129,9 @@ public class alpha_server {
           System.out.println("Listening for incoming Connections...");
           socket.receive(packet);
 
+          //Basically conveting bytes to Required Object here
           ByteArrayInputStream byteArrayInputStream =  new ByteArrayInputStream(packet.getData());
-              ObjectInputStream objectInputStream =  new ObjectInputStream(byteArrayInputStream);
+          ObjectInputStream objectInputStream =  new ObjectInputStream(byteArrayInputStream);
           Client_Server_Data client_server_data = (Client_Server_Data)objectInputStream.readObject();
 
           //Storing some more data into this obj like client ip and port
@@ -95,6 +142,7 @@ public class alpha_server {
         return client_server_data; //Return the obj to Main method for further processing
     }
 
+    //Broadcast over multicasted sockets
     private static void BroadCastClientUpdate(Client_Server_Data client_to_broadcast) throws IOException {
 
         //The functionalities and resources used by this function will be totally local and not the linked with
@@ -117,7 +165,33 @@ public class alpha_server {
         System.out.println("Packet Broadcasted...");
     }
 
+    //Requirs DBA access
+    private static Client_Server_Data tryToSignUp(Client_Server_Data client_server_data) throws Exception {
 
+        //Make a call to db to lookup  for wanted username
+        //incase found => Gen error (Username in use)
+        //If not found => Perform insertion of the record
+        Client_Server_Data to_send_back = new Client_Server_Data(); //Send back to client
+        if (!DBA.usernameExist(client_server_data.getUsername())){
+            //Perform insert query
+            boolean insert_result =  DBA.insertUser(client_server_data);
+            if (insert_result){
+                //Successful insertion
+                to_send_back.setOPERATION(OPERATIONS.signup_good);
+            }else{
+                //Generate Error , that some kinda error occurred
+                to_send_back.setOPERATION(OPERATIONS.err_msg);
+                to_send_back.setErr_msg("Some error occurred");
+            }
+
+        }else{
+            //return Err Msg that username exist
+            to_send_back.setOPERATION(OPERATIONS.err_msg);
+            to_send_back.setErr_msg("Username already exist!");
+        }
+
+        return to_send_back;
+    }
 
     //this function wil convert a single object into bytes
     private static byte[] convertObjectToBytes(Client_Server_Data object_to_convert) throws IOException {

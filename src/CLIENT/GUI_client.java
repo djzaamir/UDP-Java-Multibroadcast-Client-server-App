@@ -11,16 +11,6 @@ import java.net.DatagramSocket;
 public class GUI_client implements customEventHandler {
 
 
-    //region vars
-    private static DatagramSocket socket          = null;      //UDP socket
-    private static DatagramPacket packet          = null;     //Packet to be transmitted or received over socket
-    private static byte[]         data_buffer     = null;    // Data buffer size
-    private  static final int      server_port     = 9999;
-    private static final int      max_buffer_size = 1024; // Not sure which is the optimal UDP packet size
-    private Client_Server_Data broadCasted_client  = null;
-    //endregion
-
-
     //region Functional Section
     public void launch(){
 

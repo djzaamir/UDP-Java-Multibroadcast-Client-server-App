@@ -41,13 +41,13 @@ public class Broadcast_receiver implements Runnable {
                    DatagramPacket packet =  new DatagramPacket(buffer , buffer.length);
 
 
-               System.out.println("Waiting for server broadcast...");
+                  System.out.println("Waiting for server broadcast...");
 
                    //Begin receiving here
                    multicastSocket.receive(packet);
 
                   Client_Server_Data received_obj = convertBytesToObject(packet.getData());
-               
+
                //Our work here is done , now we will pass this obj to all the subscribed objects Which have implemented customEventHandler
                for (int i =0 ; i < this.listeners.size() ; i++){
                    this.listeners.get(i).reciveivedNewClient(received_obj);
@@ -75,7 +75,7 @@ public class Broadcast_receiver implements Runnable {
     private static Client_Server_Data convertBytesToObject(byte[] bytes) throws IOException, ClassNotFoundException {
         ByteArrayInputStream byteArrayInputStream =  new ByteArrayInputStream(bytes); //Passing in bytes in bytes scream
         ObjectInputStream objectInputStream =  new ObjectInputStream(byteArrayInputStream); //Passing bytes so that they can be converted into a object
-        return (Client_Server_Data)objectInputStream.readObject(); //Read the parsed//coverted object from here
+        return (Client_Server_Data)objectInputStream.readObject(); //Read the parsed//converted object from here
     }
 
     //endregion

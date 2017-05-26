@@ -14,6 +14,7 @@ public class Client_Server_Data implements Serializable {
                                          continue =>  login , online / offline status update*/
       private String password; //client password , this can be used multiple purposes e.g sign-up or login
       private OPERATIONS OPERATION; // the type operation clients wants to perform on server
+      private  String err_msg;
     //endregion
 
 
@@ -56,6 +57,13 @@ public class Client_Server_Data implements Serializable {
 
     public void setOPERATION(OPERATIONS OPERATION) {
         this.OPERATION = OPERATION;
+    }
+    public String getErr_msg() {
+        return err_msg;
+    }
+
+    public void setErr_msg(String err_msg) {
+        this.err_msg = err_msg;
     }
     //endregion
 }
