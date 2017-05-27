@@ -87,10 +87,8 @@ public class alpha_server {
             socket = new DatagramSocket();
             byte[] data_tr  = convertObjectToBytes(data_to_sent_back);
             InetAddress ia =  InetAddress.getByName(client_server_data.getIp().substring(1));
-            InetAddress i_test = InetAddress.getLocalHost();
-
             System.out.println(client_server_data.getIp().substring(1) + " ::: " + client_server_data.getPort());
-            packet =  new DatagramPacket(data_tr,data_tr.length , i_test , client_server_data.getPort());
+            packet =  new DatagramPacket(data_tr,data_tr.length , ia , client_server_data.getPort());
             socket.send(packet);
             System.out.println("Packet Send to");
             //endregion
@@ -147,9 +145,10 @@ public class alpha_server {
           client_server_data.setIp(packet.getAddress().toString());
           client_server_data.setPort(packet.getPort());
 
-            //Before restarting the loop , leave resources like sockets and packets
+            //Before restarting the loop , leave resources like sockets and packets (THIS IS VERY IMP)
             socket.close();
             packet = null;
+
 
         return client_server_data; //Return the obj to Main method for further processing
     }

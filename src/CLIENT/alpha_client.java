@@ -47,7 +47,7 @@ public class alpha_client {
         Client_Server_Data obj =  new Client_Server_Data();
         obj.setOPERATION(OPERATIONS.SIGNUP); //Server should perform signup operation
         obj.setPassword("arywah121bb4232");
-        obj.setUsername("arywah12g13422");
+        obj.setUsername("arywah12gdgre13422");
 
         sendData(obj);
         Client_Server_Data received_obj = null;
@@ -61,8 +61,6 @@ public class alpha_client {
         }
 
     }
-
-
 
 
     //region functional section
