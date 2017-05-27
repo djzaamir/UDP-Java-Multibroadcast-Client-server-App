@@ -34,6 +34,7 @@ public class alpha_server {
     private static final int      listen_port     = 9999;
     private static final int      max_buffer_size = 1024; // Not sure which is the optimal UDP packet size
     private ArrayList<Client_Server_Data> clients = new ArrayList<>(); //List of clients connected right now
+    private static boolean First_Run = true; //to stop multiple initialization of data
     //endregion
 
 
@@ -85,9 +86,13 @@ public class alpha_server {
             //Now sending back another fresh obj which will contain all the error msgs , and other related  stuff
             socket = new DatagramSocket();
             byte[] data_tr  = convertObjectToBytes(data_to_sent_back);
-            InetAddress ia =  InetAddress.getByName(client_server_data.getIp());
-            packet =  new DatagramPacket(data_tr,data_tr.length , ia , client_server_data.getPort());
+            InetAddress ia =  InetAddress.getByName(client_server_data.getIp().substring(1));
+            InetAddress i_test = InetAddress.getLocalHost();
+
+            System.out.println(client_server_data.getIp().substring(1) + " ::: " + client_server_data.getPort());
+            packet =  new DatagramPacket(data_tr,data_tr.length , i_test , client_server_data.getPort());
             socket.send(packet);
+            System.out.println("Packet Send to");
             //endregion
 
 
@@ -120,14 +125,18 @@ public class alpha_server {
     * */
     private static Client_Server_Data listenForIncomingConnection() throws  Exception{
 
-          //Preparing Socket connection and socket receiving data
-          data_buffer = new byte[max_buffer_size];
-          socket =  new DatagramSocket(listen_port);
-          packet =  new DatagramPacket(data_buffer , data_buffer.length);
+
+              //Preparing Socket connection and socket receiving data
+              data_buffer = new byte[max_buffer_size];
+              socket =  new DatagramSocket(listen_port);
+              packet =  new DatagramPacket(data_buffer , data_buffer.length);
+              First_Run = false;
+
 
           //Waiting for request here
           System.out.println("Listening for incoming Connections...");
           socket.receive(packet);
+
 
           //Basically conveting bytes to Required Object here
           ByteArrayInputStream byteArrayInputStream =  new ByteArrayInputStream(packet.getData());
@@ -138,6 +147,9 @@ public class alpha_server {
           client_server_data.setIp(packet.getAddress().toString());
           client_server_data.setPort(packet.getPort());
 
+            //Before restarting the loop , leave resources like sockets and packets
+            socket.close();
+            packet = null;
 
         return client_server_data; //Return the obj to Main method for further processing
     }

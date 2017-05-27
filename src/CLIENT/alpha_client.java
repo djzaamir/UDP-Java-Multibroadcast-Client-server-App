@@ -6,6 +6,7 @@ import java.io.*;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.SocketException;
 
 /**
  * Created by Aamir on 5/25/2017.
@@ -27,7 +28,7 @@ public class alpha_client {
     //endregion
 
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, ClassNotFoundException {
 
         //Main GUI window , in which we will displaying all info
         GUI_client GUI = new GUI_client();
@@ -45,16 +46,23 @@ public class alpha_client {
         //lets create a socket and transmist new request for signup
         Client_Server_Data obj =  new Client_Server_Data();
         obj.setOPERATION(OPERATIONS.SIGNUP); //Server should perform signup operation
-        obj.setPassword("djzaamir");
-        obj.setUsername("djzaamir");
+        obj.setPassword("arywah121bb4232");
+        obj.setUsername("arywah12g13422");
 
-        socket =  new DatagramSocket();
-        data_buffer = convertObjectToBytes(obj);
-        InetAddress ia =  InetAddress.getLocalHost();
-        packet  = new DatagramPacket(data_buffer , data_buffer.length ,ia ,9999 );
-        socket.send(packet);
+        sendData(obj);
+        Client_Server_Data received_obj = null;
+        received_obj = receiveData();
+        if (received_obj.getOPERATION() == OPERATIONS.err_msg){
+            System.out.println(received_obj.getErr_msg());
+        }else{
+            System.out.println(received_obj.getOPERATION().toString());
+            System.out.println("Process finished");
+
+        }
 
     }
+
+
 
 
     //region functional section
@@ -77,6 +85,27 @@ public class alpha_client {
         return (Client_Server_Data)objectInputStream.readObject(); //Read the parsed//coverted object from here
     }
 
+    //Abstracting socket communicatioin sending object
+    private static void sendData(Client_Server_Data obj) throws IOException {
+        socket =  new DatagramSocket();
+        data_buffer = convertObjectToBytes(obj);
+        InetAddress ia =  InetAddress.getLocalHost();
+        packet  = new DatagramPacket(data_buffer , data_buffer.length ,ia ,9999 );
+        socket.send(packet);
+    }
+
+    private static Client_Server_Data receiveData() throws IOException, ClassNotFoundException {
+
+        byte[] l_buffer = new byte[1024];
+        //don't need to create annother new socket because its already created
+        packet = new DatagramPacket(l_buffer , data_buffer.length);
+        System.out.println("Waiting to receive data...");
+        socket.receive(packet);
+        System.out.println("Receivng...");
+        Client_Server_Data obj  = convertBytesToObject(packet.getData());
+        System.out.println("Received and parsed...");
+        return obj;
+    }
     //endregion
 
 }
